@@ -1,0 +1,22 @@
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+
+    //  ReactiveX libraries
+    implementation "io.reactivex.rxjava2:rxjava:2.1.14"
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
+
+    //Specific bindings for Android UX  - RxBindings source: https://github.com/JakeWharton/RxBinding
+    implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7-kotlin:2.0.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
