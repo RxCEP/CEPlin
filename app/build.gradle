@@ -41,6 +41,6 @@ dependencies {
     //Specific bindings for Android UX  - RxBindings source: https://github.com/JakeWharton/RxBinding
     implementation 'com.jakewharton.rxbinding2:rxbinding-appcompat-v7-kotlin:2.0.0'
 
-    compile project(path: ':ceplin')
+    implementation project(path: ':ceplin')
 }
 
