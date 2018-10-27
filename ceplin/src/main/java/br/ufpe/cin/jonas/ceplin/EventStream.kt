@@ -177,6 +177,19 @@ fun EventStream<IntEvent>.expected() : EventStream<Double> {
     return EventStream(exp)
 }
 
+fun EventStream<IntEvent>.variance() : EventStream<Double> {
+    val variance = this.observable
+            .scan(mutableListOf<IntEvent>(),
+                    { acc, ev ->
+                        acc.add(ev)
+                        acc
+                    })
+            .filter { list -> list.size > 0}
+            .map { list -> computeVariance(list) }
+
+    return EventStream(variance)
+}
+
 /**
  * Given a list of events, calculates the probability of a given event outcome.
  */
@@ -195,6 +208,25 @@ private fun computeExpectedValue(list: MutableList<IntEvent>) : Double {
     outcomes.mapTo(probabilityList) { it.value * prob(list, it.value) }
 
     return probabilityList.sum()
+}
+
+/**
+ * Given a list of events, computes their variance value.
+ */
+fun computeVariance(list: MutableList<IntEvent>): Double {
+    var n = 0.0
+    var sum = 0.0
+    var sumSq = 0.0
+    var x: Double
+
+    for (ev in list) {
+        x = ev.value.toDouble()
+        n++
+        sum += x
+        sumSq += x * x
+    }
+
+    return (sumSq - (sum * sum)/n)/n
 }
 
 private fun <T, R> EventStream<T>.mapAccumulator(eventStream: EventStream<T>, function: (List<T>) -> R?): EventStream<R?> {
