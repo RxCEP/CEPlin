@@ -2,8 +2,8 @@ package br.ufpe.cin.jonas.ceplin
 
 import br.ufpe.cin.jonas.ceplin.util.IntEvent
 import io.reactivex.Observable
+import java.util.*
 import java.util.concurrent.TimeUnit
-
 
 class EventStream<T>(val observable: Observable<T>) {
 
@@ -11,46 +11,55 @@ class EventStream<T>(val observable: Observable<T>) {
         this.observable.subscribe(onNext)
     }
 
+    /**
+     * The filter operator emits only events from an
+     * EventStream that satisfies a predicate function.
+     */
     fun filter(predicate: (T) -> Boolean): EventStream<T> {
         return EventStream(this.observable.filter(predicate))
     }
 
+    /**
+     * The map operator transforms an EventStream by creating
+     * a new EventStream through a projection function.
+     */
     fun <R> map(transform: ((T) -> R)): EventStream<R> {
         return EventStream<R>(this.observable.map(transform))
     }
 
-    fun accumulator(): EventStream<MutableList<T>> {
-        val accumulator = this.observable.scan(mutableListOf<T>(),
-            { accumulated, item ->
-                accumulated.add(item)
-                accumulated
-            }
-        )
-        return EventStream(accumulator)
-    }
-
+    /**
+     * The sequence operator emits only events that follows
+     * a specified order within a set of events. The operator
+     * takes a predicate function as the sequence condition
+     * and the length of the sequence to be considered.
+     */
     fun sequence(predicate: (T, T) -> Boolean, count: Int, skip: Int = count): EventStream<List<T>> {
         val sequenceEquals = this.observable
-            .buffer(count, skip)
-            .filter {
-                var filter = true
-                if (count > 1) {
-                    for (i in 1..(it.size - 1)) {
-                        if (!predicate(it[i - 1], it[i])) {
-                            filter = false
-                            break
+                .buffer(count, skip)
+                .filter {
+                    var filter = true
+                    if (count > 1) {
+                        for (i in 1..(it.size - 1)) {
+                            if (!predicate(it[i - 1], it[i])) {
+                                filter = false
+                                break
+                            }
                         }
                     }
+                    filter
                 }
-                filter
-            }
         return EventStream(sequenceEquals)
     }
 
+    /**
+     * The merge operator merges two EventStreams and notifies
+     * the subscriber through a ComplexEvent object when
+     * both EventStreams happen within a given time frame.
+     */
     fun <R> merge(stream: EventStream<R>): ComplexEvent {
-        var merged = Observable.merge(
-            this.observable.map { element -> Pair(element, 1) },
-            stream.observable.map { element -> Pair(element, 2) }
+        val merged = Observable.merge(
+                this.observable.map { element -> Pair(element, 1) },
+                stream.observable.map { element -> Pair(element, 2) }
         )
         return ComplexEvent(observable = merged, numberOfEvents = 2)
     }
@@ -59,14 +68,22 @@ class EventStream<T>(val observable: Observable<T>) {
         return EventStream(this.observable.buffer(timespan, timeUnit))
     }
 
+    /**
+     * The window operator only emits events that
+     * happened within a given time frame.
+     */
     fun window(timespan: Long, timeUnit: TimeUnit): EventStream<T> {
         return EventStream(this.observable.buffer(timespan, timeUnit).flatMap{Observable.fromIterable(it)})
     }
 
+    /**
+     * The union operator merges two EventStreams into one EventStream
+     * that emits events from both streams as they arrive.
+     */
     fun union(stream: EventStream<T>): EventStream<T> {
         val merged = Observable.merge(
-            this.observable,
-            stream.observable).distinct()
+                this.observable,
+                stream.observable).distinct()
         return EventStream<T>(merged)
     }
 
@@ -74,14 +91,25 @@ class EventStream<T>(val observable: Observable<T>) {
         return EventStream<R>(this.observable.map(transform))
     }
 
+    fun accumulator(): EventStream<MutableList<T>> {
+        val accumulator = this.observable.scan(mutableListOf<T>(),
+                { accumulated, item ->
+                    accumulated.add(item)
+                    accumulated
+                }
+        )
+        return EventStream(accumulator)
+    }
 }
 
+/***** Extension functions *****/
+
 fun <T : Comparable<T>> EventStream<T>.max(): EventStream<T?> {
-    return mapAccumulator(this, { it?.max() })
+    return mapAccumulator(this, { it.max() })
 }
 
 fun <T : Comparable<T>> EventStream<T>.min(): EventStream<T?> {
-    return mapAccumulator(this, { it?.min() })
+    return mapAccumulator(this, { it.min() })
 }
 
 fun <T : Comparable<T>> EventStream<T>.sumBy(selector: (T) -> Int): EventStream<IntEvent?> {
@@ -90,7 +118,7 @@ fun <T : Comparable<T>> EventStream<T>.sumBy(selector: (T) -> Int): EventStream<
 
 private fun <T, R> EventStream<T>.mapAccumulator(eventStream: EventStream<T>, function: (List<T>) -> R?): EventStream<R?> {
     val min = eventStream.accumulator().observable
-        .filter { it.size > 0 }
-        .map { function(it) }
+            .filter { it.size > 0 }
+            .map { function(it) }
     return EventStream(min)
 }
