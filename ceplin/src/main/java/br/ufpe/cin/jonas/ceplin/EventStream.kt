@@ -1,6 +1,6 @@
 package br.ufpe.cin.jonas.ceplin
 
-import br.ufpe.cin.jonas.ceplin.util.IntEvent
+import br.ufpe.cin.jonas.ceplin.util.NumericEvent
 import io.reactivex.Observable
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -112,80 +112,82 @@ fun <T : Comparable<T>> EventStream<T>.min(): EventStream<T?> {
     return mapAccumulator(this, { it.min() })
 }
 
-fun <T : Comparable<T>> EventStream<T>.sumBy(selector: (T) -> Int): EventStream<IntEvent?> {
-    return this.mapAccumulator(this, { IntEvent(it.sumBy(selector)) })
+fun <T : Comparable<T>> EventStream<T>.sumBy(selector: (T) -> Int): EventStream<NumericEvent<Number>?> {
+    return this.mapAccumulator(this, { NumericEvent(it.sumBy(selector)) })
 }
 
-fun EventStream<IntEvent>.sum(): EventStream<Int> {
+fun <T : Number>EventStream<NumericEvent<T>>.sum(): EventStream<NumericEvent<Double>> {
     val sum = this.observable
-            .scan(0,
+            .scan(0.0,
                     { accumulated, item ->
-                        accumulated + item.value
+                        accumulated + item.value.toDouble()
                     })
+            .map { NumericEvent(it) }
 
     return EventStream(sum)
 }
 
-fun EventStream<IntEvent>.count(): Observable<Int> {
-    val count = this.observable
+fun <T : Number>EventStream<NumericEvent<T>>.count(): EventStream<NumericEvent<Int>> {
+    val count: Observable<NumericEvent<Int>> = this.observable
             .scan(0,
                     { accumulated, _ ->
                         accumulated + 1
                     })
+            .map { NumericEvent(it) }
 
-    return count
+    return EventStream(count)
 }
 
-fun EventStream<IntEvent>.average(timeSpan: Long, date: Date) : EventStream<Int> {
+fun <T : Number>EventStream<NumericEvent<T>>.average(timeSpan: Long, date: Date) : EventStream<NumericEvent<Double>> {
     val avg = this.observable
-            .filter { e: IntEvent -> e.timeStamp.time - date.time < timeSpan }
-            .scan(Pair(0, 0),
+            .filter { e: NumericEvent<T> -> e.timeStamp.time - date.time < timeSpan }
+            .scan(Pair(0.0, 0),
                     { acc, v ->
                         // first: sum, second: count
-                        Pair(acc.first + v.value, acc.second + 1)
+                        Pair(acc.first + v.value.toDouble(), acc.second + 1)
                     })
             // prevent division by 0
-            .filter { acc -> acc.second > 0}
-            .map { acc -> acc.first/acc.second }
+            .filter { pair -> pair.second > 0}
+            .map { pair -> NumericEvent(pair.first/pair.second) }
 
     return EventStream(avg)
 }
 
-fun EventStream<IntEvent>.probability(value: Int) : EventStream<Double> {
+fun <T : Number>EventStream<NumericEvent<T>>.probability() : EventStream<NumericEvent<Double>> {
     val prob = this.observable
-            .scan(mutableListOf<IntEvent>(),
+            .scan(mutableListOf<NumericEvent<T>>(),
                     { acc, ev ->
                         acc.add(ev)
                         acc
                     })
             .filter { list -> list.size > 0}
-            .map { list -> prob(list, list.last().value) }
+            .map { list -> NumericEvent(prob(list, list.last().value)) }
 
     return EventStream(prob)
 }
 
-fun EventStream<IntEvent>.expected() : EventStream<Double> {
+fun <T : Number>EventStream<NumericEvent<T>>.expected() : EventStream<NumericEvent<Double>> {
     val exp = this.observable
-            .scan(mutableListOf<IntEvent>(),
+            .scan(mutableListOf<NumericEvent<T>>(),
                     { acc, ev ->
                         acc.add(ev)
                         acc
                     })
             .filter { list -> list.size > 0}
-            .map { list -> computeExpectedValue(list) }
+            .map { list -> NumericEvent(computeExpectedValue(list)) }
 
     return EventStream(exp)
 }
 
-fun EventStream<IntEvent>.variance() : EventStream<Double> {
+fun <T : Number>EventStream<NumericEvent<T>>.variance() : EventStream<NumericEvent<Double>> {
     val variance = this.observable
-            .scan(mutableListOf<IntEvent>(),
+            .scan(mutableListOf<NumericEvent<T>>(),
                     { acc, ev ->
                         acc.add(ev)
                         acc
                     })
             .filter { list -> list.size > 0}
-            .map { list -> computeVariance(list) }
+            .map { list -> NumericEvent(computeVariance(list)) }
 
     return EventStream(variance)
 }
@@ -193,7 +195,7 @@ fun EventStream<IntEvent>.variance() : EventStream<Double> {
 /**
  * Given a list of events, calculates the probability of a given event outcome.
  */
-private fun prob(list: MutableList<IntEvent>, outcome: Int): Double {
+private fun <T : Number> prob(list: MutableList<NumericEvent<T>>, outcome: T): Double {
     val occ = list.count { it.value == outcome }
     return occ/list.size.toDouble()
 }
@@ -201,11 +203,11 @@ private fun prob(list: MutableList<IntEvent>, outcome: Int): Double {
 /**
  * Given a list of events, computes the expected value of an event.
  */
-private fun computeExpectedValue(list: MutableList<IntEvent>) : Double {
+private fun <T : Number> computeExpectedValue(list: MutableList<NumericEvent<T>>) : Double {
     val probabilityList = mutableListOf<Double>()
     val outcomes = list.distinct()
 
-    outcomes.mapTo(probabilityList) { it.value * prob(list, it.value) }
+    outcomes.mapTo(probabilityList) { it.value.toDouble() * prob(list, it.value) }
 
     return probabilityList.sum()
 }
@@ -213,7 +215,7 @@ private fun computeExpectedValue(list: MutableList<IntEvent>) : Double {
 /**
  * Given a list of events, computes their variance value.
  */
-fun computeVariance(list: MutableList<IntEvent>): Double {
+private fun <T : Number> computeVariance(list: MutableList<NumericEvent<T>>): Double {
     var n = 0.0
     var sum = 0.0
     var sumSq = 0.0
