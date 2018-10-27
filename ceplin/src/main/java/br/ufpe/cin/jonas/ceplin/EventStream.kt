@@ -116,6 +116,87 @@ fun <T : Comparable<T>> EventStream<T>.sumBy(selector: (T) -> Int): EventStream<
     return this.mapAccumulator(this, { IntEvent(it.sumBy(selector)) })
 }
 
+fun EventStream<IntEvent>.sum(): EventStream<Int> {
+    val sum = this.observable
+            .scan(0,
+                    { accumulated, item ->
+                        accumulated + item.value
+                    })
+
+    return EventStream(sum)
+}
+
+fun EventStream<IntEvent>.count(): Observable<Int> {
+    val count = this.observable
+            .scan(0,
+                    { accumulated, _ ->
+                        accumulated + 1
+                    })
+
+    return count
+}
+
+fun EventStream<IntEvent>.average(timeSpan: Long, date: Date) : EventStream<Int> {
+    val avg = this.observable
+            .filter { e: IntEvent -> e.timeStamp.time - date.time < timeSpan }
+            .scan(Pair(0, 0),
+                    { acc, v ->
+                        // first: sum, second: count
+                        Pair(acc.first + v.value, acc.second + 1)
+                    })
+            // prevent division by 0
+            .filter { acc -> acc.second > 0}
+            .map { acc -> acc.first/acc.second }
+
+    return EventStream(avg)
+}
+
+fun EventStream<IntEvent>.probability(value: Int) : EventStream<Double> {
+    val prob = this.observable
+            .scan(mutableListOf<IntEvent>(),
+                    { acc, ev ->
+                        acc.add(ev)
+                        acc
+                    })
+            .filter { list -> list.size > 0}
+            .map { list -> prob(list, list.last().value) }
+
+    return EventStream(prob)
+}
+
+fun EventStream<IntEvent>.expected() : EventStream<Double> {
+    val exp = this.observable
+            .scan(mutableListOf<IntEvent>(),
+                    { acc, ev ->
+                        acc.add(ev)
+                        acc
+                    })
+            .filter { list -> list.size > 0}
+            .map { list -> computeExpectedValue(list) }
+
+    return EventStream(exp)
+}
+
+/**
+ * Given a list of events, calculates the probability of a given event outcome.
+ */
+private fun prob(list: MutableList<IntEvent>, outcome: Int): Double {
+    val occ = list.count { it.value == outcome }
+    return occ/list.size.toDouble()
+}
+
+/**
+ * Given a list of events, computes the expected value of an event.
+ */
+private fun computeExpectedValue(list: MutableList<IntEvent>) : Double {
+    val probabilityList = mutableListOf<Double>()
+    val outcomes = list.distinct()
+
+    outcomes.mapTo(probabilityList) { it.value * prob(list, it.value) }
+
+    return probabilityList.sum()
+}
+
 private fun <T, R> EventStream<T>.mapAccumulator(eventStream: EventStream<T>, function: (List<T>) -> R?): EventStream<R?> {
     val min = eventStream.accumulator().observable
             .filter { it.size > 0 }
