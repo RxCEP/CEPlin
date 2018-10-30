@@ -2,7 +2,6 @@ package br.ufpe.cin.jonas.ceplin
 
 import java.util.*
 
-
-interface Event{
+interface Event {
     val timeStamp: Date
 }

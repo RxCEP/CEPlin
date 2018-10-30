@@ -3,7 +3,6 @@ package br.ufpe.cin.jonas.ceplin.util
 import br.ufpe.cin.jonas.ceplin.Event
 import java.util.*
 
-
 class IntEvent(val value: Int) : Event, Comparable<IntEvent> {
 
     override val timeStamp = Date()
@@ -18,6 +17,7 @@ class IntEvent(val value: Int) : Event, Comparable<IntEvent> {
         }
         return super.equals(other)
     }
+
     override fun hashCode(): Int {
         return value!!.hashCode()
     }

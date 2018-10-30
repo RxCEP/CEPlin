@@ -4,7 +4,6 @@ import br.ufpe.cin.jonas.ceplin.util.IntEvent
 import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
-
 class EventStream<T>(val observable: Observable<T>) {
 
     fun subscribe(onNext: ((T) -> Unit)) {
