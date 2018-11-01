@@ -5,7 +5,7 @@ import java.util.*
 
 class NumericEvent<out T : Number>(val value: T) : Event {
 
-    override val timeStamp = Date()
+    override val timestamp = Date()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

@@ -3,6 +3,7 @@ package br.ufpe.cin.jonas.ceplin
 import io.reactivex.subjects.PublishSubject
 
 class EventManager<T : Event> {
+
     private val events = PublishSubject.create<T>()
 
     fun addEvent(event: T) {

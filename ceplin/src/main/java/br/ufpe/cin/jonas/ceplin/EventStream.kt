@@ -138,9 +138,9 @@ fun <T : Number>EventStream<NumericEvent<T>>.count(): EventStream<NumericEvent<I
     return EventStream(count)
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.average(timeSpan: Long, date: Date) : EventStream<NumericEvent<Double>> {
+fun <T : Number>EventStream<NumericEvent<T>>.average(timespan: Long, date: Date) : EventStream<NumericEvent<Double>> {
     val avg = this.observable
-            .filter { e: NumericEvent<T> -> e.timeStamp.time - date.time < timeSpan }
+            .filter { e: NumericEvent<T> -> e.timestamp.time - date.time < timespan }
             .scan(Pair(0.0, 0),
                     { acc, v ->
                         // first: sum, second: count

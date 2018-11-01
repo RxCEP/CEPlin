@@ -5,6 +5,6 @@ import java.util.*
 
 
 class LightEvent(val lx: Float) : Event {
-    override val timeStamp = Date()
+    override val timestamp = Date()
 }
 
