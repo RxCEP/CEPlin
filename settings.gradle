@@ -1,1 +1,1 @@
-include ':app', ':ceplin'
+include ':app', ':ceplin', ':cep-stock'

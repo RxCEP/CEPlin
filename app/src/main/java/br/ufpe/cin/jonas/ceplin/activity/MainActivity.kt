@@ -11,10 +11,10 @@ import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
 import br.ufpe.cin.jonas.ceplin.EventManager
 import br.ufpe.cin.jonas.ceplin.R
-import br.ufpe.cin.jonas.ceplin.util.AccelerationEvent
-import br.ufpe.cin.jonas.ceplin.util.LightEvent
-import br.ufpe.cin.jonas.ceplin.util.ProximityEvent
-import br.ufpe.cin.jonas.ceplin.util.TouchEvent
+import br.ufpe.cin.jonas.ceplin.activity.model.AccelerationEvent
+import br.ufpe.cin.jonas.ceplin.activity.model.LightEvent
+import br.ufpe.cin.jonas.ceplin.activity.model.ProximityEvent
+import br.ufpe.cin.jonas.ceplin.activity.model.TouchEvent
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_main.*

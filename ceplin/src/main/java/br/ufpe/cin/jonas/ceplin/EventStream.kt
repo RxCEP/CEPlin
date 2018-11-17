@@ -2,7 +2,6 @@ package br.ufpe.cin.jonas.ceplin
 
 import br.ufpe.cin.jonas.ceplin.util.NumericEvent
 import io.reactivex.Observable
-import java.util.*
 import java.util.concurrent.TimeUnit
 
 class EventStream<T>(val observable: Observable<T>) {
@@ -127,7 +126,7 @@ fun <T : Number>EventStream<out NumericEvent<T>>.sum(): EventStream<NumericEvent
     return EventStream(sum)
 }
 
-fun <T : Number>EventStream<out NumericEvent<T>>.count(): EventStream<NumericEvent<Int>> {
+fun <T> EventStream<T>.count(): EventStream<NumericEvent<Int>> {
     val count: Observable<NumericEvent<Int>> = this.observable
             .scan(0,
                     { accumulated, _ ->
@@ -192,7 +191,7 @@ fun <T : Number>EventStream<out NumericEvent<T>>.variance() : EventStream<Numeri
 }
 
 /**
- * Given a list of events, calculates the probability of a given event outcome.
+ * Given a list of events, calculates the probability of a given event value's outcome.
  */
 private fun <T : Number> prob(list: List<NumericEvent<T>>, outcome: T): Double {
     val occ = list.count { it.value == outcome }
@@ -215,14 +214,13 @@ private fun <T : Number> computeExpectedValue(list: List<NumericEvent<T>>) : Dou
  * Given a list of events, computes their variance value.
  */
 private fun <T : Number> computeVariance(list: List<NumericEvent<T>>): Double {
-    var n = 0.0
+    val n = list.size
     var sum = 0.0
     var sumSq = 0.0
     var x: Double
 
     for (ev in list) {
         x = ev.value.toDouble()
-        n++
         sum += x
         sumSq += x * x
     }

@@ -3,9 +3,17 @@ package br.ufpe.cin.jonas.ceplin.util
 import br.ufpe.cin.jonas.ceplin.Event
 import java.util.*
 
-class NumericEvent<out T : Number>(val value: T) : Event {
+open class NumericEvent<out T : Number> : Event {
 
-    override val timestamp = Date()
+    val value: T
+    final override val timestamp: Date
+
+    constructor(value: T) : this(value, Date())
+
+    constructor(value: T, timestamp: Date) {
+        this.value = value
+        this.timestamp = timestamp
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

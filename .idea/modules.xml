@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CEPlin.iml" filepath="$PROJECT_DIR$/CEPlin.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cep-stock/cep-stock.iml" filepath="$PROJECT_DIR$/cep-stock/cep-stock.iml" />
       <module fileurl="file://$PROJECT_DIR$/ceplin/ceplin.iml" filepath="$PROJECT_DIR$/ceplin/ceplin.iml" />
     </modules>
   </component>
