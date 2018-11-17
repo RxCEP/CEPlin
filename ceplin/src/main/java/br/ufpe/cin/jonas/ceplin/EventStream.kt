@@ -116,7 +116,7 @@ fun <T : Comparable<T>> EventStream<T>.sumBy(selector: (T) -> Int): EventStream<
     return this.mapAccumulator(this, { NumericEvent(it.sumBy(selector)) })
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.sum(): EventStream<NumericEvent<Double>> {
+fun <T : Number>EventStream<out NumericEvent<T>>.sum(): EventStream<NumericEvent<Double>> {
     val sum = this.observable
             .scan(0.0,
                     { accumulated, item ->
@@ -127,7 +127,7 @@ fun <T : Number>EventStream<NumericEvent<T>>.sum(): EventStream<NumericEvent<Dou
     return EventStream(sum)
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.count(): EventStream<NumericEvent<Int>> {
+fun <T : Number>EventStream<out NumericEvent<T>>.count(): EventStream<NumericEvent<Int>> {
     val count: Observable<NumericEvent<Int>> = this.observable
             .scan(0,
                     { accumulated, _ ->
@@ -138,9 +138,8 @@ fun <T : Number>EventStream<NumericEvent<T>>.count(): EventStream<NumericEvent<I
     return EventStream(count)
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.average(timespan: Long, date: Date) : EventStream<NumericEvent<Double>> {
+fun <T : Number>EventStream<out NumericEvent<T>>.average() : EventStream<NumericEvent<Double>> {
     val avg = this.observable
-            .filter { e: NumericEvent<T> -> e.timestamp.time - date.time < timespan }
             .scan(Pair(0.0, 0),
                     { acc, v ->
                         // first: sum, second: count
@@ -153,7 +152,7 @@ fun <T : Number>EventStream<NumericEvent<T>>.average(timespan: Long, date: Date)
     return EventStream(avg)
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.probability() : EventStream<NumericEvent<Double>> {
+fun <T : Number>EventStream<out NumericEvent<T>>.probability() : EventStream<NumericEvent<Double>> {
     val prob = this.observable
             .scan(mutableListOf<NumericEvent<T>>(),
                     { acc, ev ->
@@ -166,7 +165,7 @@ fun <T : Number>EventStream<NumericEvent<T>>.probability() : EventStream<Numeric
     return EventStream(prob)
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.expected() : EventStream<NumericEvent<Double>> {
+fun <T : Number>EventStream<out NumericEvent<T>>.expected() : EventStream<NumericEvent<Double>> {
     val exp = this.observable
             .scan(mutableListOf<NumericEvent<T>>(),
                     { acc, ev ->
@@ -179,7 +178,7 @@ fun <T : Number>EventStream<NumericEvent<T>>.expected() : EventStream<NumericEve
     return EventStream(exp)
 }
 
-fun <T : Number>EventStream<NumericEvent<T>>.variance() : EventStream<NumericEvent<Double>> {
+fun <T : Number>EventStream<out NumericEvent<T>>.variance() : EventStream<NumericEvent<Double>> {
     val variance = this.observable
             .scan(mutableListOf<NumericEvent<T>>(),
                     { acc, ev ->
@@ -195,7 +194,7 @@ fun <T : Number>EventStream<NumericEvent<T>>.variance() : EventStream<NumericEve
 /**
  * Given a list of events, calculates the probability of a given event outcome.
  */
-private fun <T : Number> prob(list: MutableList<NumericEvent<T>>, outcome: T): Double {
+private fun <T : Number> prob(list: List<NumericEvent<T>>, outcome: T): Double {
     val occ = list.count { it.value == outcome }
     return occ/list.size.toDouble()
 }
@@ -203,7 +202,7 @@ private fun <T : Number> prob(list: MutableList<NumericEvent<T>>, outcome: T): D
 /**
  * Given a list of events, computes the expected value of an event.
  */
-private fun <T : Number> computeExpectedValue(list: MutableList<NumericEvent<T>>) : Double {
+private fun <T : Number> computeExpectedValue(list: List<NumericEvent<T>>) : Double {
     val probabilityList = mutableListOf<Double>()
     val outcomes = list.distinct()
 
@@ -215,7 +214,7 @@ private fun <T : Number> computeExpectedValue(list: MutableList<NumericEvent<T>>
 /**
  * Given a list of events, computes their variance value.
  */
-private fun <T : Number> computeVariance(list: MutableList<NumericEvent<T>>): Double {
+private fun <T : Number> computeVariance(list: List<NumericEvent<T>>): Double {
     var n = 0.0
     var sum = 0.0
     var sumSq = 0.0
