@@ -12,7 +12,7 @@ class IntEvent(val value: Int) : Event, Comparable<IntEvent> {
     }
 
     override fun equals(other: Any?): Boolean {
-        if(other is IntEvent){
+        if (other is IntEvent) {
             return this.value == other?.value
         }
         return super.equals(other)
@@ -27,6 +27,6 @@ class IntEvent(val value: Int) : Event, Comparable<IntEvent> {
     }
 }
 
-fun Int.toEvent() : IntEvent{
+fun Int.toEvent(): IntEvent {
     return IntEvent(this)
 }

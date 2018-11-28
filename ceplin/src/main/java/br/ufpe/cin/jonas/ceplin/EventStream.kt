@@ -3,8 +3,6 @@ package br.ufpe.cin.jonas.ceplin
 import br.ufpe.cin.jonas.ceplin.util.IntEvent
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.withLatestFrom
-import io.reactivex.functions.Function
-import io.reactivex.observables.GroupedObservable
 import java.util.concurrent.TimeUnit
 
 class EventStream<T>(val observable: Observable<T>) {
@@ -95,11 +93,9 @@ class EventStream<T>(val observable: Observable<T>) {
      * </p>
      */
     fun not(stream: EventStream<T>): EventStream<T> {
-        val streamAccumulated = EventStream<MutableList<T>?>(stream.accumulator().observable.startWith(ArrayList<T>()))
+        val streamAccumulated = EventStream<MutableList<T>>(stream.accumulator().observable.startWith(ArrayList<T>()))
         val filtered = this.observable.withLatestFrom(streamAccumulated.observable).filter { (event, accumulated) ->
-            accumulated?.filter {
-                it == event
-            }?.count() == 0
+            !accumulated.contains(event)
         }.map {
             it.first
         }
@@ -126,11 +122,9 @@ class EventStream<T>(val observable: Observable<T>) {
      * </p>
      */
     fun intersect(stream: EventStream<T>): EventStream<T> {
-        val streamAccumulated = EventStream<MutableList<T>?>(stream.accumulator().observable.startWith(ArrayList<T>()))
+        val streamAccumulated = EventStream<MutableList<T>>(stream.accumulator().observable.startWith(ArrayList<T>()))
         val filtered = this.observable.withLatestFrom(streamAccumulated.observable).filter { (event, accumulated) ->
-            accumulated?.filter {
-                it == event
-            }?.count() != 0
+            accumulated.contains(event)
         }.map {
             it.first
         }.distinct()
@@ -141,11 +135,13 @@ class EventStream<T>(val observable: Observable<T>) {
      * Equivalent to Cugola Order by operator
      *
      * <p>
-     *     This is a simple wrap of RxJava sorted, to sort elements by given comparator
+     *     Compare events by given comparator and return a stream with all of then ordered by accordingly
      * </p>
      */
-    fun orderBy(comparison: Comparator<MutableList<T>?>): EventStream<MutableList<T>?> {
-        val ordered = this.accumulator().observable.sorted(comparison)
+    fun <R : Comparable<R>> orderBy(comparison: ((T) -> R)): EventStream<List<T>> {
+        val ordered = this.accumulator().map {
+            it.sortedBy(comparison)
+        }.observable
         return EventStream(ordered)
     }
 
@@ -153,11 +149,13 @@ class EventStream<T>(val observable: Observable<T>) {
      * Equivalent to Cugola Group by operator
      *
      * <p>
-     *     This is a simple wrap of RxJava groupBy, to split elements by given grouping function
+     *     Compare events by given comparator and return a stream with all of then grouped by accordingly
      * </p>
      */
-    fun groupBy(comparison: Function<MutableList<T>?, T>): EventStream<GroupedObservable<T?, MutableList<T>?>?> {
-        val grouped = this.accumulator().observable.groupBy(comparison)
+    fun <R> groupBy(comparison: ((T) -> R)): EventStream<Map<R, List<T>>> {
+        val grouped = this.accumulator().map {
+            it.groupBy(comparison)
+        }.observable
         return EventStream(grouped)
     }
 
