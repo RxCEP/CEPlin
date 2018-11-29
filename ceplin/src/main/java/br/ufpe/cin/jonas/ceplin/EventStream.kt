@@ -174,7 +174,7 @@ fun <T : Number>EventStream<out NumericEvent<T>>.average() : EventStream<Numeric
 fun <T : Number>EventStream<out List<NumericEvent<T>>>.averageBuffer() : EventStream<NumericEvent<Double>> {
     val avg = this.observable.map {
         val sum = it.sumByDouble { it.value.toDouble() }
-        NumericEvent(sum/it.size.toDouble(), it.last().timestamp)
+        NumericEvent(sum/it.size.toDouble())
     }
 
     return EventStream(avg)
