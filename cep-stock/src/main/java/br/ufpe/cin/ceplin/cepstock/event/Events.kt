@@ -6,7 +6,9 @@ import java.util.Date
 
 class EquityPriceEvent(val symbol: String,
                        timestamp: Date,
-                       close: Number) : NumericEvent<Number>(close, timestamp)
+                       val open: Double,
+                       val high: Double,
+                       val low: Double,
+                       val close: Double) : NumericEvent<Double>(close, timestamp)
 
-class EquityReturnEvent(val symbol: String, timestamp: Date, returnRatio: Double) : NumericEvent<Number>(returnRatio, timestamp)
 class EquitySimulationCompletedEvent(val symbol: String, override val timestamp: Date) : Event

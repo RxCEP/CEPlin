@@ -8,6 +8,7 @@ import br.ufpe.cin.ceplin.cepstock.model.TimeSeriesPoint
 import br.ufpe.cin.ceplin.cepstock.util.FileUtils
 import br.ufpe.cin.jonas.ceplin.EventManager
 import com.google.gson.GsonBuilder
+import io.reactivex.subjects.PublishSubject
 import java.util.Date
 import java.util.Timer
 import kotlin.concurrent.timerTask
@@ -18,6 +19,8 @@ class EquitySimulator(private val resId: Int,
     lateinit var equityData: TimeSeries
     var priceManager: EventManager<EquityPriceEvent>? = null
     var completedManager: EventManager<EquitySimulationCompletedEvent>? = null
+
+    var publishSubject: PublishSubject<EquityPriceEvent>? = null
 
     private lateinit var timeSeries: List<TimeSeriesPoint>
 
@@ -34,7 +37,8 @@ class EquitySimulator(private val resId: Int,
         timeSeries = equityData.timeSeries.filter { it.dateTime >= startDate && it.dateTime <= endDate }
     }
 
-    fun start(i: Int) {
+    fun start(i: Int, monitor: Monitor) {
+        val symbol = equityData.symbol
         var n = 0
         val delay = options.delay * i
         val period = options.delay * options.equitySymbols!!.size
@@ -47,11 +51,19 @@ class EquitySimulator(private val resId: Int,
             if (it.hasNext()) {
                 val value = it.next()
 
-                priceManager?.addEvent(EquityPriceEvent(equityData.symbol,
-                                       value.dateTime,
-                                       value.close))
+                val ev = EquityPriceEvent(symbol,
+                                          value.dateTime,
+                                          value.open,
+                                          value.high,
+                                          value.low,
+                                          value.close)
+
+                priceManager?.addEvent(ev)
+                publishSubject?.onNext(ev)
+
+                monitor.append(Monitor.MonitorEntry(value.dateTime.time, "Equity Price Event", symbol))
                 if (++n >= days) {
-                    completedManager?.addEvent(EquitySimulationCompletedEvent(equityData.symbol, Date()))
+                    completedManager?.addEvent(EquitySimulationCompletedEvent(symbol, Date()))
                     timer.cancel()
                 }
             }
