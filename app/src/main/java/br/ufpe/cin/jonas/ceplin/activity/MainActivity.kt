@@ -16,12 +16,10 @@ import br.ufpe.cin.jonas.ceplin.util.LightEvent
 import br.ufpe.cin.jonas.ceplin.util.ProximityEvent
 import br.ufpe.cin.jonas.ceplin.util.TouchEvent
 import io.reactivex.Observable
-import io.reactivex.internal.util.HalfSerializer.onComplete
 import io.reactivex.subjects.PublishSubject
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
-
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -59,7 +57,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         //setInPocketRuleRxOnly()
 
     }
-
 
     private fun setHorizontalRule() {
         gestureManager.asStream().sequence({ a, b ->
@@ -152,7 +149,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
     }
 
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val action = event.actionMasked
         when (action) {
@@ -204,7 +200,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     fun log(s: String) {
         displayText.text = "$s\n${displayText.text}"
     }
-
 }
 
 val Int.dpToPx: Int get() = (this * Resources.getSystem().displayMetrics.density).toInt()

@@ -8,7 +8,6 @@ class ComplexEvent(val observable: Observable<Pair<Any?, Int>>,
                    val timespan: Long = 5,
                    val timeUnit: TimeUnit = TimeUnit.SECONDS) {
 
-
     fun subscribe(onComplete: () -> Unit) {
         this.observable.buffer(timespan, timeUnit, numberOfEvents)
             .subscribe { bundle ->
