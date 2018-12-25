@@ -2,6 +2,7 @@ package br.ufpe.cin.jonas.ceplin
 
 import br.ufpe.cin.jonas.ceplin.util.NumericEvent
 import io.reactivex.Observable
+import io.reactivex.rxkotlin.withLatestFrom
 import java.util.concurrent.TimeUnit
 
 class EventStream<T>(val observable: Observable<T>) {
@@ -76,7 +77,7 @@ class EventStream<T>(val observable: Observable<T>) {
      * happened within a given time frame.
      */
     fun window(timespan: Long, timeUnit: TimeUnit): EventStream<T> {
-        return EventStream(this.observable.buffer(timespan, timeUnit).flatMap{Observable.fromIterable(it)})
+        return EventStream(this.observable.buffer(timespan, timeUnit).flatMap { Observable.fromIterable(it) })
     }
 
     /**
@@ -88,6 +89,81 @@ class EventStream<T>(val observable: Observable<T>) {
                 this.observable,
                 stream.observable).distinct()
         return EventStream<T>(merged)
+    }
+
+    /**
+     * Equivalent to Cugola Except operator
+     *
+     * <p>
+     *     Filters the accumulated from all EventStreams that exists in current stream
+     *     but not in given one
+     * </p>
+     */
+    fun not(stream: EventStream<T>): EventStream<T> {
+        val streamAccumulated = EventStream<MutableList<T>>(stream.accumulator().observable.startWith(ArrayList<T>()))
+        val filtered = this.observable.withLatestFrom(streamAccumulated.observable).filter { (event, accumulated) ->
+            !accumulated.contains(event)
+        }.map {
+            it.first
+        }
+        return EventStream<T>(filtered)
+    }
+
+    /**
+     * Equivalent to Cugola Remove-duplicates operator
+     *
+     * <p>
+     *     This is a simple wrap of RxJava distinct
+     * </p>
+     */
+    fun distinct(): EventStream<T> {
+        return EventStream<T>(this.observable.distinct())
+    }
+
+    /**
+     * Equivalent to Cugola Intersect operator
+     *
+     * <p>
+     *     Filters the accumulated from all EventStreams that exists in current stream
+     *     and in given one
+     * </p>
+     */
+    fun intersect(stream: EventStream<T>): EventStream<T> {
+        val streamAccumulated = EventStream<MutableList<T>>(stream.accumulator().observable.startWith(ArrayList<T>()))
+        val filtered = this.observable.withLatestFrom(streamAccumulated.observable).filter { (event, accumulated) ->
+            accumulated.contains(event)
+        }.map {
+            it.first
+        }.distinct()
+        return EventStream<T>(filtered)
+    }
+
+    /**
+     * Equivalent to Cugola Order by operator
+     *
+     * <p>
+     *     Compare events by given comparator and return a stream with all of then ordered by accordingly
+     * </p>
+     */
+    fun <R : Comparable<R>> orderBy(comparison: ((T) -> R)): EventStream<List<T>> {
+        val ordered = this.accumulator().map {
+            it.sortedBy(comparison)
+        }.observable
+        return EventStream(ordered)
+    }
+
+    /**
+     * Equivalent to Cugola Group by operator
+     *
+     * <p>
+     *     Compare events by given comparator and return a stream with all of then grouped by accordingly
+     * </p>
+     */
+    fun <R> groupBy(comparison: ((T) -> R)): EventStream<Map<R, List<T>>> {
+        val grouped = this.accumulator().map {
+            it.groupBy(comparison)
+        }.observable
+        return EventStream(grouped)
     }
 
     fun <R> distinct(transform: ((T) -> R)): EventStream<R> {
