@@ -26,10 +26,11 @@ class ComplexEvent(val observable: Observable<Pair<Any?, Int>>,
     }
 
     fun <E> merge(eventStream: EventStream<E>): ComplexEvent {
-        var merged = Observable.merge(
+        val merged = Observable.merge(
             this.observable,
             eventStream.observable.map { element -> Pair(element, numberOfEvents + 1) }
         )
+
         return ComplexEvent(merged, numberOfEvents + 1)
     }
 }

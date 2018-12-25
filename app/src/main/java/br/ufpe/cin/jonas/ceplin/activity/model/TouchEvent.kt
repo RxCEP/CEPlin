@@ -5,6 +5,6 @@ import java.util.*
 
 
 class TouchEvent(val x: Float, val y: Float) : Event {
-    override val timeStamp = Date()
+    override val timestamp = Date()
 }
 

@@ -5,7 +5,7 @@ import java.util.*
 
 class IntEvent(val value: Int) : Event, Comparable<IntEvent> {
 
-    override val timeStamp = Date()
+    override val timestamp = Date()
 
     override fun compareTo(other: IntEvent): Int {
         return this.value.compareTo(other.value)

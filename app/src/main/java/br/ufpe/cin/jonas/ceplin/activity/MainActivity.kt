@@ -36,7 +36,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val lightManager = EventManager<LightEvent>()
     private val proxManager = EventManager<ProximityEvent>()
 
-
     private val X = 20.dpToPx
     private val Y = 10.dpToPx
 
@@ -61,31 +60,31 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun setHorizontalRule() {
         gestureManager.asStream().sequence({ a, b ->
             abs(a.x - b.x) > X &&
-                abs(a.y - b.y) < Y
+                    abs(a.y - b.y) < Y
         }, 5)
-            .subscribe {
-                log("Horizontal gesture")
-            }
+                .subscribe {
+                    log("Horizontal gesture")
+                }
     }
 
     private val publishSubject = PublishSubject.create<TouchEvent>()
 
     private fun setHorizontalRuleRxOnly(count: Int = 5, skip: Int = count) {
         val sequenceEquals = this.publishSubject
-            .buffer(count, skip)
-            .filter {
-                var filter = true
-                if (it.isNotEmpty() && count > 1) {
-                    for (i in 1..(it.size - 1)) {
-                        if (!(abs(it[i - 1].x - it[i].x) > X
-                                && abs(it[i - 1].y - it[i].y) < Y)) {
-                            filter = false
-                            break
+                .buffer(count, skip)
+                .filter {
+                    var filter = true
+                    if (it.isNotEmpty() && count > 1) {
+                        for (i in 1..(it.size - 1)) {
+                            if (!(abs(it[i - 1].x - it[i].x) > X
+                                    && abs(it[i - 1].y - it[i].y) < Y)) {
+                                filter = false
+                                break
+                            }
                         }
                     }
+                    filter
                 }
-                filter
-            }
         sequenceEquals.subscribe {
             log("Horizontal gesture")
         }
@@ -111,42 +110,42 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
         val mergedRules = Observable.merge(accelerationRule, proximityRule)
         mergedRules.buffer(5, TimeUnit.SECONDS, 2)
-            .subscribe { bundle ->
+                .subscribe { bundle ->
 
-                val events = bundle.listIterator()
-                val values = mutableSetOf<Int>()
+                    val events = bundle.listIterator()
+                    val values = mutableSetOf<Int>()
 
-                for (item in events) {
-                    when(item.getOrNull(0)){
-                        is AccelerationEvent ->{
-                            values.add(1)
-                        }
-                        is ProximityEvent ->{
-                            values.add(2)
+                    for (item in events) {
+                        when(item.getOrNull(0)){
+                            is AccelerationEvent ->{
+                                values.add(1)
+                            }
+                            is ProximityEvent ->{
+                                values.add(2)
+                            }
                         }
                     }
-                }
 
-                if (values.count() == 2) {
-                    log("IN POCKET!")
+                    if (values.count() == 2) {
+                        log("IN POCKET!")
+                    }
                 }
-            }
     }
 
     private fun <T> getSequenceObservable(subject: PublishSubject<T>, predicate: (T, T) -> Boolean, count: Int = 5, skip: Int = count): Observable<MutableList<T>>? {
         return subject.buffer(count, skip)
-            .filter {
-                var filter = true
-                if (it.isNotEmpty() && count > 1) {
-                    for (i in 1..(it.size - 1)) {
-                        if (!predicate(it[i - 1], it[i])) {
-                            filter = false
-                            break
+                .filter {
+                    var filter = true
+                    if (it.isNotEmpty() && count > 1) {
+                        for (i in 1..(it.size - 1)) {
+                            if (!predicate(it[i - 1], it[i])) {
+                                filter = false
+                                break
+                            }
                         }
                     }
+                    filter
                 }
-                filter
-            }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

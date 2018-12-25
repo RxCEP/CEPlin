@@ -7,7 +7,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
 
     //  ReactiveX libraries
-    implementation "io.reactivex.rxjava2:rxjava:2.1.14"
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.14'
     implementation 'io.reactivex.rxjava2:rxkotlin:2.2.0'
 
     //Specific bindings for Android UX  - RxBindings source: https://github.com/JakeWharton/RxBinding

@@ -5,6 +5,6 @@ import java.util.*
 
 
 class ProximityEvent(val dist: Float) : Event {
-    override val timeStamp = Date()
+    override val timestamp = Date()
 }
 

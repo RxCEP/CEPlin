@@ -5,6 +5,6 @@ import java.util.*
 
 
 class AccelerationEvent(val x: Float, val y: Float, val z: Float) : Event {
-    override val timeStamp = Date()
+    override val timestamp = Date()
 }
 
